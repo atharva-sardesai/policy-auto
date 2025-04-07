@@ -73,7 +73,8 @@ export async function generateDocument({
         // Set the data for the template
         const currentDate = new Date().toLocaleDateString();
         
-        doc.setData({
+        // Use the new method - pass data directly to render
+        const data = {
           Company_Name: companyName,
           CompanyName: companyName,
           Owner_Name: ownerName,
@@ -84,10 +85,11 @@ export async function generateDocument({
           Company_Logo: "",
           CompanyLogo: "",
           Logo: ""
-        });
+        };
         
         // Render the document with the data
-        doc.render();
+        // @ts-ignore: docxtemplater types might be outdated
+        doc.render(data);
         
         // Generate the output
         const outputBuffer = doc.getZip().generate({
@@ -167,17 +169,18 @@ async function createDocumentWithLogoFromTemplate({
     
     // Set the data for text placeholders only
     const currentDate = new Date().toLocaleDateString();
-    doc.setData({
+    const data = {
       Company_Name: companyName,
       CompanyName: companyName,
       Owner_Name: ownerName,
       OwnerName: ownerName,
       Generated_Date: currentDate,
       current_date: currentDate
-    });
+    };
     
-    // Render the document without logo
-    doc.render();
+    // Use render with data object directly (new method)
+    // @ts-ignore: docxtemplater types might be outdated
+    doc.render(data);
     
     // Save to a temporary file
     const tempFilePath = path.join(outputDir, `temp_${Date.now()}_${templateName}.docx`);

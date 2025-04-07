@@ -7,134 +7,16 @@ import fs from 'fs/promises'
 import path from 'path'
 import { execSync } from 'child_process'
 
-// Helper function to directly use Python without going through the document generator
+// Helper function to directly use JavaScript for document generation
 async function generateWithPython(templatePath: string, outputDir: string, companyName: string, ownerName: string, logoPath?: string): Promise<string> {
-  const pythonScript = path.join(process.cwd(), 'scripts', 'generate_policy.py')
-  
-  // Check if Python is installed by running a simple test command
-  let pythonAvailable = false;
-  try {
-    execSync('python --version', { stdio: 'ignore' });
-    pythonAvailable = true;
-    console.log("Python is available on this system");
-  } catch (e) {
-    console.log("Python is not available on this system, will use JavaScript fallback");
-  }
-  
-  // If Python is not available, fall back to JavaScript implementation
-  if (!pythonAvailable) {
-    console.log("Using JavaScript fallback for document generation");
-    return await generateDocument({
-      templatePath,
-      outputDir,
-      companyName,
-      ownerName,
-      logoPath
-    });
-  }
-  
-  if (!existsSync(pythonScript)) {
-    console.log("Python script not found, using JavaScript fallback");
-    return await generateDocument({
-      templatePath,
-      outputDir,
-      companyName,
-      ownerName,
-      logoPath
-    });
-  }
-  
-  // Create a predictable output path pattern that we can find later
-  const templateName = path.basename(templatePath, path.extname(templatePath))
-  const sanitizedCompanyName = companyName.replace(/\s+/g, '_')
-  const timestamp = Math.floor(Date.now()/1000)
-  const expectedFilename = `${sanitizedCompanyName}_${templateName}_${timestamp}.docx`
-  const expectedPath = path.join(outputDir, expectedFilename)
-  
-  // Create log file path
-  const logFilePath = path.join(process.cwd(), 'python_output.log')
-  
-  // Build command with redirected output - fix Windows path issues
-  let command;
-  if (process.platform === 'win32') {
-    // On Windows, ensure paths with spaces are properly quoted
-    command = `python "${pythonScript}" "${templatePath}" "${outputDir}" "${companyName}" "${ownerName}" ${logoPath ? `"${logoPath}"` : "null"}`;
-  } else {
-    // For Unix-like systems
-    command = `python "${pythonScript}" "${templatePath}" "${outputDir}" "${companyName}" "${ownerName}" ${logoPath ? `"${logoPath}"` : "null"} > "${logFilePath}" 2>&1`;
-  }
-  
-  console.log(`Executing Python command: ${command}`)
-  
-  try {
-    // Execute Python script without redirecting output on Windows
-    if (process.platform === 'win32') {
-      execSync(command, { 
-        timeout: 60000, // 60 seconds timeout
-        stdio: ['ignore', 'pipe', 'pipe'], // Capture output but don't pass stdin
-        windowsHide: true,
-        maxBuffer: 1024 * 1024 * 10 // 10MB buffer
-      });
-    } else {
-      // Use redirection for Unix-like systems
-      execSync(command, { 
-        timeout: 60000,
-        stdio: 'ignore'
-      });
-    }
-    
-    // Check if our expected file was created
-    if (existsSync(expectedPath)) {
-      return expectedPath
-    }
-    
-    // If the expected file wasn't created, look for the most recent docx file with matching company name
-    const files = readdirSync(outputDir)
-    const recentFiles = files
-      .filter(file => file.endsWith('.docx') && file.includes(sanitizedCompanyName))
-      .map(file => {
-        const filePath = path.join(outputDir, file)
-        const stats = statSync(filePath)
-        return { path: filePath, mtime: stats.mtime }
-      })
-      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime())
-    
-    if (recentFiles.length > 0) {
-      return recentFiles[0].path
-    }
-    
-    // If no matching file found, try JavaScript fallback
-    console.log("Python did not generate any files, using JavaScript fallback");
-    return await generateDocument({
-      templatePath,
-      outputDir,
-      companyName,
-      ownerName,
-      logoPath
-    });
-  } catch (error: any) {
-    console.error(`Error executing Python: ${error.message}`);
-    
-    // Try to read log file for more info
-    if (existsSync(logFilePath)) {
-      try {
-        const logContent = readFileSync(logFilePath, 'utf8');
-        console.error(`Python log (last 500 chars): ${logContent.slice(-500)}`);
-      } catch (logError: any) {
-        console.error(`Error reading Python log: ${logError.message}`);
-      }
-    }
-    
-    // Fall back to JavaScript implementation on Python error
-    console.log("Python execution failed, using JavaScript fallback");
-    return await generateDocument({
-      templatePath,
-      outputDir,
-      companyName,
-      ownerName,
-      logoPath
-    });
-  }
+  console.log("Using JavaScript for document generation (Python support removed)");
+  return await generateDocument({
+    templatePath,
+    outputDir,
+    companyName,
+    ownerName,
+    logoPath
+  });
 }
 
 export async function POST(request: NextRequest) {
