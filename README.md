@@ -1,22 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ISO Policy Automation
+
+A Next.js application for automating the generation of ISO policy documents using customizable templates.
+
+## Features
+
+- Upload and manage DOCX policy templates
+- Generate customized policy documents with company details
+- Download individual or batch policy documents
+- Pure JavaScript implementation for document generation (no Python dependency)
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Document Generation
+
+This application uses the `docx` and `docx-templates` libraries to generate policy documents from templates. The system:
+
+1. Allows uploading DOCX templates with placeholders
+2. Replaces placeholders like `{Company_Name}` and `{Owner_Name}` with user-provided values
+3. Optionally adds company logos to documents
+4. Creates downloadable DOCX files
+
+## Template Formatting
+
+When creating DOCX templates, use the following placeholder format:
+
+- `{Company_Name}` - Will be replaced with the company name
+- `{Owner_Name}` - Will be replaced with the owner name
+- `{Generated_Date}` - Will be replaced with the current date
+
+### Logo Insertion
+
+To insert a logo in your DOCX template, you have several options:
+
+1. **Basic placeholder** (standard size):
+   ```
+   {Logo}
+   ```
+
+2. **Function-style insertion**:
+   
+   Standard size:
+   ```
+   {insertLogo()}
+   ```
+   
+   Custom size (width, height in pixels):
+   ```
+   {insertLogo(200, 80)}
+   ```
+   
+   Predefined sizes:
+   ```
+   {insertSmallLogo()}    // 100 × 40 pixels
+   {insertMediumLogo()}   // 160 × 60 pixels
+   {insertLargeLogo()}    // 240 × 90 pixels
+   ```
+
+3. **Alternative formats** (for compatibility):
+   ```
+   {Company_Logo}
+   {CompanyLogo}
+   {Company.Logo}
+   ```
+
+#### Best Practices for Logo Insertion:
+
+- **Template Placement**: Place the logo command on its own line in the template
+- **Image Format**: Use PNG or JPEG format for best compatibility 
+- **Image Size**: Keep your logo file reasonably sized (under 1MB recommended)
+- **Aspect Ratio**: For best results, maintain the original aspect ratio of your logo
+- **Troubleshooting**: If one insertion method doesn't work, try another from the options above
+- **Testing**: For challenging templates, create a simple test document with just basic text and a logo placeholder
+
+## Project Structure
+
+- `/src` - Next.js application code
+  - `/app` - Application routes and API endpoints
+  - `/components` - React components
+  - `/utils` - Utility functions including document generation
+- `/templates` - Stores uploaded template files
+- `/uploads` - Temporary storage for uploaded logos
+- `/generated_policies` - Output directory for generated documents
+
+## Learn More
+
+To learn more about the technologies used in this project:
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [docx library](https://docx.js.org/)
+- [docx-templates](https://github.com/guigrpa/docx-templates)
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
