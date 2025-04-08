@@ -3,11 +3,6 @@ const nextConfig = {
   // Disable static exports to ensure server-side rendering
   output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   
-  // Required for App Router
-  experimental: {
-    appDir: true,
-  },
-  
   // Necessary for running on Netlify
   trailingSlash: true,
   reactStrictMode: true,

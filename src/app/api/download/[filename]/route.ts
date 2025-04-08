@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-type RouteParams = {
+// Updated to match Next.js 15.2.4 requirements for context
+type Context = {
   params: {
     filename: string;
   }
@@ -10,15 +11,15 @@ type RouteParams = {
 
 export async function GET(
   request: NextRequest,
-  params: RouteParams
+  context: Context
 ) {
   try {
-    // Access the filename from params safely
-    if (!params || !params.params) {
+    // Access the filename from context safely
+    if (!context || !context.params) {
       return new Response('Missing filename parameter', { status: 400 });
     }
     
-    const filename = params.params.filename;
+    const filename = context.params.filename;
     const decodedFilename = decodeURIComponent(filename);
     console.log(`Downloading file: ${decodedFilename}`);
     
