@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/build.js && next build",
-    "build:production": "node scripts/build.js && next build --no-lint --output=standalone",
+    "build:production": "node scripts/build.js && NODE_ENV=production next build --no-lint && node scripts/post-build.js",
     "start": "next start",
     "lint": "next lint",
     "setup": "node scripts/check_dependencies.js"

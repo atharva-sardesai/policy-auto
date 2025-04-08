@@ -1,11 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // Disable static exports to ensure server-side rendering
+  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  
+  // Required for App Router
   experimental: {
     appDir: true,
-    serverComponentsExternalPackages: [],
   },
+  
+  // Necessary for running on Netlify
+  trailingSlash: true,
   reactStrictMode: true,
+  
+  // Use standard Next.js directory
+  distDir: '.next',
+  
+  // Enable source maps in production for better error reporting
+  productionBrowserSourceMaps: true,
 };
 
 module.exports = nextConfig; 

@@ -1,0 +1,5 @@
+# Handle all routes with Next.js
+/* /.netlify/functions/next :splat 200
+
+# SPA fallback for client-side routing
+/* /index.html 200 

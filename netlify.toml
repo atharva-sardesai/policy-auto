@@ -1,6 +1,6 @@
 [build]
   command = "npm run build:production"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
@@ -8,7 +8,7 @@
   NEXT_DISABLE_ESLINT = "true"
   NEXT_TELEMETRY_DISABLED = "1"
   NEXT_EXPERIMENTAL_SSR = "1"
-  NEXT_DISABLE_STATIC_EXPORT = "1"
+  NEXT_DISABLE_STATIC_EXPORT = "false"
 
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
