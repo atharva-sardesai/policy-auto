@@ -11,6 +11,9 @@
   NEXT_DISABLE_STATIC_EXPORT = "false"
   NEXT_SKIP_TYPE_CHECK = "true"
 
+# Disable plugins to avoid conflicts
+[plugins]
+
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
   pip = true 
