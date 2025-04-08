@@ -11,7 +11,4 @@
 
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
-  pip = true
-
-# Explicitly define an empty plugins array to override UI settings
-[[plugins]] 
+  pip = true 
