@@ -14,7 +14,8 @@
 [build.processing.skip]
   pip = true
 
-# Disable the Next.js plugin completely
+# Configure the Next.js plugin with minimal settings
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  enabled = false 
+  [plugins.inputs]
+    skipBuild = true 
