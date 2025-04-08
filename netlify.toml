@@ -15,5 +15,6 @@
   pip = true
 
 # Disable the Next.js plugin completely
-[plugins]
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
   enabled = false 
