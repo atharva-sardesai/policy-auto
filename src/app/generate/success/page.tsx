@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { FileText, Download, ChevronLeft } from "lucide-react"
@@ -9,7 +9,29 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-export default function SuccessPage() {
+// Loading component for Suspense
+function LoadingGeneratedFiles() {
+  return (
+    <div className="container mx-auto py-10">
+      <Card className="max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle>Loading Documents</CardTitle>
+          <CardDescription>
+            Please wait while we load your generated documents...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center p-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Content component that uses useSearchParams
+function SuccessPageContent() {
   const searchParams = useSearchParams()
   const [files, setFiles] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +52,7 @@ export default function SuccessPage() {
           } catch (parseErr) {
             console.error("Error parsing JSON:", parseErr)
             // If it fails to parse as JSON, it might be a single file path
-            if (typeof decodedParam === 'string' && decodedParam.includes('generated_policies')) {
+            if (typeof decodedParam === 'string' && decodedParam.includes('generated_docs')) {
               parsedFiles = [decodedParam]
             } else {
               throw parseErr
@@ -89,12 +111,12 @@ export default function SuccessPage() {
     try {
       if (!filePath) return "";
       
-      // Look for the generated_policies part of the path
+      // Look for the generated_docs part of the path
       let relativePath = "";
       
-      if (filePath.includes('generated_policies')) {
-        const parts = filePath.split('generated_policies');
-        // Take everything after 'generated_policies/'
+      if (filePath.includes('generated_docs')) {
+        const parts = filePath.split('generated_docs');
+        // Take everything after 'generated_docs/'
         if (parts.length > 1) {
           relativePath = parts[1].replace(/^[/\\]/, ''); // Remove leading slash or backslash
         } else {
@@ -209,4 +231,16 @@ export default function SuccessPage() {
       </Card>
     </div>
   )
-} 
+}
+
+// Main component with Suspense boundary
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<LoadingGeneratedFiles />}>
+      <SuccessPageContent />
+    </Suspense>
+  )
+}
+
+// This export ensures Next.js treats this as a dynamic route
+export const dynamic = 'force-dynamic'; 

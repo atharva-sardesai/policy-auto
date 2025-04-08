@@ -7,6 +7,8 @@
   NODE_VERSION = "18"
   NEXT_DISABLE_ESLINT = "true"
   NEXT_TELEMETRY_DISABLED = "1"
+  NEXT_EXPERIMENTAL_SSR = "1"
+  NEXT_DISABLE_STATIC_EXPORT = "1"
 
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
