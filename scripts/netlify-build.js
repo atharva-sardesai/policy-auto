@@ -163,27 +163,27 @@ function createFallbackOutput() {
 
 // Main build function
 async function build() {
-  // Create temp .eslintrc.js file to disable linting during build
-  const eslintrcPath = path.join(process.cwd(), '.eslintrc.js');
-  let originalEslintrc = null;
-  
   try {
-    if (fs.existsSync(eslintrcPath)) {
-      originalEslintrc = fs.readFileSync(eslintrcPath, 'utf8');
-    }
+    // Create temp .eslintrc.js file to disable linting during build
+    const eslintrcPath = path.join(process.cwd(), '.eslintrc.js');
+    let originalEslintrc = null;
     
-    // Write a temporary ESLint config that disables all rules
-    fs.writeFileSync(eslintrcPath, `
+    try {
+      if (fs.existsSync(eslintrcPath)) {
+        originalEslintrc = fs.readFileSync(eslintrcPath, 'utf8');
+      }
+      
+      // Write a temporary ESLint config that disables all rules
+      fs.writeFileSync(eslintrcPath, `
 module.exports = {
   extends: [],
   rules: {},
   ignorePatterns: ['**/*']
 };
-    `);
-    
-    log('Temporarily disabled ESLint for build');
-    
-    try {
+      `);
+      
+      log('Temporarily disabled ESLint for build');
+      
       // Try to run a normal Next.js build
       log('Running Next.js build...');
       execSync('next build', { stdio: 'inherit', env: { 
@@ -207,6 +207,19 @@ module.exports = {
     } catch (buildError) {
       log(`Next.js build failed: ${buildError.message}`);
       createFallbackOutput();
+    } finally {
+      // Restore original .eslintrc.js if it existed
+      if (originalEslintrc) {
+        fs.writeFileSync(eslintrcPath, originalEslintrc);
+        log('Restored original ESLint configuration');
+      } else {
+        // If there was no original, delete the temporary one
+        try {
+          fs.unlinkSync(eslintrcPath);
+        } catch (unlinkError) {
+          // Ignore errors when deleting
+        }
+      }
     }
     
     // Copy templates directory regardless of build success
@@ -234,19 +247,6 @@ module.exports = {
     copyTemplates();
     
     return false;
-  } finally {
-    // Restore original .eslintrc.js if it existed
-    if (originalEslintrc) {
-      fs.writeFileSync(eslintrcPath, originalEslintrc);
-      log('Restored original ESLint configuration');
-    } else {
-      // If there was no original, delete the temporary one
-      try {
-        fs.unlinkSync(eslintrcPath);
-      } catch (unlinkError) {
-        // Ignore errors when deleting
-      }
-    }
   }
 }
 
