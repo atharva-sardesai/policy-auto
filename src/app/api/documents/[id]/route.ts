@@ -38,10 +38,10 @@ const mockDocumentDetails = {
 // Updated function signature to match Next.js 15.2.4 requirements for dynamic routes
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const documentId = context.params.id
+    const documentId = params.id
 
     // In a real app, you would fetch the document from your database
     const document = mockDocumentDetails[documentId as keyof typeof mockDocumentDetails]
