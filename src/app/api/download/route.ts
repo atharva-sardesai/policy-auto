@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
-import { existsSync } from 'fs'
+import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 
 export async function GET(request: NextRequest) {
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
       // Try to find the file in the generated_docs directory
       const docsDir = join(process.cwd(), 'generated_docs')
       try {
-        const fs = require('fs')
-        const files = fs.readdirSync(docsDir)
+        const files = readdirSync(docsDir)
         
         // Look for a file that ends with the requested file name
         const requestedFileName = normalizedFile.split('/').pop() || ''

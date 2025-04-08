@@ -2,9 +2,7 @@ import { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, HeadingL
 import { promises as fs } from 'fs';
 import fs_sync from 'fs';
 import path from 'path';
-// @ts-ignore
 import Docxtemplater from 'docxtemplater';
-// @ts-ignore
 import PizZip from 'pizzip';
 import { Buffer } from 'buffer';
 
@@ -88,7 +86,6 @@ export async function generateDocument({
         };
         
         // Render the document with the data
-        // @ts-ignore: docxtemplater types might be outdated
         doc.render(data);
         
         // Generate the output
@@ -179,7 +176,6 @@ async function createDocumentWithLogoFromTemplate({
     };
     
     // Use render with data object directly (new method)
-    // @ts-ignore: docxtemplater types might be outdated
     doc.render(data);
     
     // Save to a temporary file

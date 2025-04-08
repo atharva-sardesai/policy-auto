@@ -1,19 +1,15 @@
 declare module 'docxtemplater' {
-  interface DocxtemplaterOptions {
+  import PizZip from 'pizzip';
+
+  interface DocxTemplaterOptions {
     paragraphLoop?: boolean;
     linebreaks?: boolean;
-    modules?: any[];
-    parser?: (tag: string) => { type: string; value: string; module?: string };
   }
 
   class Docxtemplater {
-    constructor(zip: any, options?: DocxtemplaterOptions);
-    setData(data: Record<string, any>): void;
-    resolveData(data: Record<string, any>): Promise<void>;
-    render(): void;
-    getZip(): {
-      generate(options: { type: string; compression: string }): any;
-    };
+    constructor(zip: PizZip, options?: DocxTemplaterOptions);
+    render(data?: Record<string, unknown>): void;
+    getZip(): PizZip;
   }
 
   export = Docxtemplater;
@@ -34,9 +30,16 @@ declare module 'docxtemplater-image-module-free' {
 }
 
 declare module 'pizzip' {
-  class PizZip {
-    constructor(data?: Buffer | ArrayBuffer | Uint8Array | string);
+  interface PizZipFile {
+    asText(): string;
   }
-  
+
+  class PizZip {
+    constructor(data?: Buffer | Uint8Array | ArrayBuffer | string);
+    file(path: string): PizZipFile | null;
+    file(path: string, data: string): PizZip;
+    generate(options: { type: string; compression?: string }): Buffer;
+  }
+
   export = PizZip;
 } 
