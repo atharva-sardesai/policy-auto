@@ -12,10 +12,4 @@
 
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
-  pip = true
-
-# Configure the Next.js plugin with minimal settings
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    skipBuild = true 
+  pip = true 
