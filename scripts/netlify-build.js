@@ -61,16 +61,16 @@ function copyTemplates() {
   log(`✅ Copied ${filesCopied} template files to output directory`);
 }
 
-// Create fallback static output
-function createFallbackOutput() {
-  log('Creating fallback static output...');
+// Create static output
+function createStaticOutput() {
+  log('Creating static output...');
   
   const outDir = path.join(process.cwd(), 'out');
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
   
-  // Create fallback index.html
+  // Create index.html
   const indexHtml = `
 <!DOCTYPE html>
 <html>
@@ -158,98 +158,22 @@ function createFallbackOutput() {
 /*    /index.html   200
   `);
   
-  log('✅ Created fallback static output');
+  log('✅ Created static output');
 }
 
 // Main build function
 async function build() {
   try {
-    // Create temp .eslintrc.js file to disable linting during build
-    const eslintrcPath = path.join(process.cwd(), '.eslintrc.js');
-    let originalEslintrc = null;
+    // Create static output
+    createStaticOutput();
     
-    try {
-      if (fs.existsSync(eslintrcPath)) {
-        originalEslintrc = fs.readFileSync(eslintrcPath, 'utf8');
-      }
-      
-      // Write a temporary ESLint config that disables all rules
-      fs.writeFileSync(eslintrcPath, `
-module.exports = {
-  extends: [],
-  rules: {
-    "@typescript-eslint/no-unused-vars": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "react/no-unescaped-entities": "off"
-  },
-  ignorePatterns: ['**/*']
-};
-      `);
-      
-      log('Temporarily disabled ESLint for build');
-      
-      // Try to run a normal Next.js build
-      log('Running Next.js build...');
-      execSync('next build', { stdio: 'inherit', env: { 
-        ...process.env,
-        NEXT_DISABLE_ESLINT: '1',
-        SKIP_ESLINT_CHECK: 'true',
-        ESLINT_NO_DEV_ERRORS: 'true'
-      }});
-      
-      log('Next.js build successful');
-      
-      // Try to export the static site
-      try {
-        log('Exporting static site...');
-        execSync('next export -o out', { stdio: 'inherit' });
-        log('Static export successful');
-      } catch (exportError) {
-        log(`Static export failed: ${exportError.message}`);
-        createFallbackOutput();
-      }
-    } catch (buildError) {
-      log(`Next.js build failed: ${buildError.message}`);
-      createFallbackOutput();
-    } finally {
-      // Restore original .eslintrc.js if it existed
-      if (originalEslintrc) {
-        fs.writeFileSync(eslintrcPath, originalEslintrc);
-        log('Restored original ESLint configuration');
-      } else {
-        // If there was no original, delete the temporary one
-        try {
-          fs.unlinkSync(eslintrcPath);
-        } catch (unlinkError) {
-          // Ignore errors when deleting
-        }
-      }
-    }
-    
-    // Copy templates directory regardless of build success
+    // Copy templates directory
     copyTemplates();
     
-    // Create necessary Netlify files
-    log('Setting up Netlify files...');
-    
-    // Create _redirects file (in case it wasn't created already)
-    const outDir = path.join(process.cwd(), 'out');
-    if (!fs.existsSync(path.join(outDir, '_redirects'))) {
-      fs.writeFileSync(path.join(outDir, '_redirects'), `
-# Netlify redirects
-/*    /index.html   200
-      `);
-    }
-    
-    log('✅ Build completed successfully with fallback mechanisms');
+    log('✅ Build completed successfully');
     return true;
   } catch (error) {
     log(`❌ Error during build: ${error.message}`);
-    
-    // Create fallback output as a last resort
-    createFallbackOutput();
-    copyTemplates();
-    
     return false;
   }
 }
@@ -258,11 +182,11 @@ module.exports = {
 build()
   .then(success => {
     if (!success) {
-      log('Build completed with fallback output');
-      // Don't exit with error code, allow the fallback to be used
+      log('Build failed');
+      process.exit(1);
     }
   })
   .catch(error => {
     console.error('Unhandled error during build:', error);
-    // Don't exit with error code, allow any fallback to be used
+    process.exit(1);
   }); 

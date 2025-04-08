@@ -3,7 +3,6 @@
   publish = "out"
 
 [build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "1"
   NODE_VERSION = "18"
   NEXT_DISABLE_ESLINT = "1"
   NEXT_TELEMETRY_DISABLED = "1"
@@ -16,8 +15,6 @@
 [build.processing.skip]
   pip = true
 
-# Configure the Next.js plugin with minimal settings
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    skipBuild = true 
+# Disable all plugins
+[plugins]
+  enabled = false 
