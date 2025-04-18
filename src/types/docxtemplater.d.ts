@@ -18,8 +18,8 @@ declare module 'docxtemplater' {
 declare module 'docxtemplater-image-module-free' {
   interface ImageModuleOptions {
     centered?: boolean;
-    getImage?: (tagValue: any, tagName?: string) => any;
-    getSize?: (tagValue: any, tagName?: any) => [number, number];
+    getImage?: (tagValue: string | Buffer, tagName?: string) => Promise<Buffer>;
+    getSize?: (tagValue: string | Buffer, tagName?: string) => [number, number];
   }
 
   class ImageModule {
