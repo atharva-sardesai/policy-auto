@@ -1,6 +1,4 @@
 [build]
-  command = "node scripts/netlify-build.js"
-  publish = "out"
   command = "npm run build"
   publish = ".next"
 
