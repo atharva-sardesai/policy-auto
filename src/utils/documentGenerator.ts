@@ -58,7 +58,7 @@ export async function generateDocument({
     await fs.writeFile(outputPath, buffer);
 
     return outputPath;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating document:', error);
     throw error;
   }

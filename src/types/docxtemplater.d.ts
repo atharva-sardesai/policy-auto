@@ -42,4 +42,40 @@ declare module 'pizzip' {
   }
 
   export = PizZip;
+}
+
+declare module 'docx-templates' {
+  interface CreateReportOptions {
+    template: Buffer;
+    data: Record<string, unknown>;
+    cmdDelimiter?: [string, string];
+    processLineBreaks?: boolean;
+    noSandbox?: boolean;
+    rejectNullish?: boolean;
+    failFast?: boolean;
+    additionalJsContext?: Record<string, unknown>;
+    errorHandler?: (error: Error, commandCode: string) => string;
+  }
+
+  interface ImageData {
+    data: Buffer;
+    width: number;
+    height: number;
+    extension: string;
+  }
+
+  interface ImageOptions {
+    data: Buffer;
+    transformation: {
+      width: number;
+      height: number;
+    };
+    type: string;
+    fallback?: {
+      type: string;
+      data: Buffer;
+    };
+  }
+
+  export function createReport(options: CreateReportOptions): Promise<Buffer>;
 } 
