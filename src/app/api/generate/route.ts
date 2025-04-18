@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { join } from 'path'
 import { mkdir, writeFile } from 'fs/promises'
 import { generateDocument } from '@/utils/documentGenerator'
@@ -17,7 +17,7 @@ async function generateWithPython(templatePath: string, outputDir: string, compa
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log("Document generation API called");
   
   try {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     
     // Check required fields
     if (!companyName || !ownerName) {
-      return Response.json({ 
+      return NextResponse.json({ 
         success: false, 
         error: "Company name and owner name are required." 
       }, { status: 400 });
@@ -44,16 +44,16 @@ export async function POST(request: NextRequest) {
     try {
       templateIds = JSON.parse(selectedTemplates);
       console.log(`Parsed template IDs: ${JSON.stringify(templateIds)}`);
-    } catch (parseError: unknown) {
-      console.error('Error parsing template IDs:', parseError instanceof Error ? parseError.message : 'Unknown error');
-      return Response.json({ 
+    } catch (parseError) {
+      console.error('Error parsing template IDs:', parseError);
+      return NextResponse.json({ 
         success: false, 
         error: `Invalid template selection: ${parseError instanceof Error ? parseError.message : 'Unknown error'}` 
       }, { status: 400 });
     }
     
     if (!templateIds.length) {
-      return Response.json({ 
+      return NextResponse.json({ 
         success: false, 
         error: "No templates selected." 
       }, { status: 400 });
@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
     try {
       templateFiles = await fs.readdir(templatesDir);
       console.log(`Found ${templateFiles.length} template files in ${templatesDir}`);
-    } catch (readError: unknown) {
-      console.error('Error reading templates directory:', readError instanceof Error ? readError.message : 'Unknown error');
-      return Response.json({ 
+    } catch (readError) {
+      console.error('Error reading templates directory:', readError);
+      return NextResponse.json({ 
         success: false, 
         error: `Could not read templates: ${readError instanceof Error ? readError.message : 'Unknown error'}` 
       }, { status: 500 });
@@ -167,8 +167,8 @@ export async function POST(request: NextRequest) {
           if (stats.size === 0) {
             throw new Error('Template file is empty');
           }
-        } catch (statError: unknown) {
-          console.error(`Error checking template file: ${statError instanceof Error ? statError.message : 'Unknown error'}`);
+        } catch (statError) {
+          console.error(`Error checking template file: ${statError}`);
           failedTemplates.push({
             id: templateId,
             error: `Error checking template file: ${statError instanceof Error ? statError.message : 'Unknown error'}`
@@ -176,22 +176,22 @@ export async function POST(request: NextRequest) {
           continue;
         }
         
-        // Generate document using Python directly
+        // Generate document
         console.log(`Generating document from template: ${matchingFile}`);
         console.log(`Using logoPath: ${logoPath || 'none'}`);
         
-        const outputPath = await generateWithPython(
+        const outputPath = await generateDocument({
           templatePath,
-          docsDir,
+          outputDir: docsDir,
           companyName,
           ownerName,
           logoPath
-        );
+        });
         
         console.log(`Document generated successfully: ${outputPath}`);
         generatedDocs.push(path.basename(outputPath));
-      } catch (templateError: unknown) {
-        console.error(`Error processing template ${templateId}:`, templateError instanceof Error ? templateError.message : 'Unknown error');
+      } catch (templateError) {
+        console.error(`Error processing template ${templateId}:`, templateError);
         failedTemplates.push({
           id: templateId,
           error: templateError instanceof Error ? templateError.message : 'Unknown error'
@@ -201,22 +201,22 @@ export async function POST(request: NextRequest) {
     
     // Return results
     if (generatedDocs.length > 0) {
-      return Response.json({ 
+      return NextResponse.json({ 
         success: true, 
         documents: generatedDocs,
         generatedDocs,
         failedTemplates: failedTemplates.length > 0 ? failedTemplates : undefined
       });
     } else {
-      return Response.json({ 
+      return NextResponse.json({ 
         success: false, 
         error: "Failed to generate any documents", 
         failedTemplates 
       }, { status: 500 });
     }
-  } catch (error: unknown) {
-    console.error('Error in document generation API:', error instanceof Error ? error.message : 'Unknown error');
-    return Response.json({ 
+  } catch (error) {
+    console.error('Error in document generation API:', error);
+    return NextResponse.json({ 
       success: false, 
       error: error instanceof Error ? error.message : "Unknown error" 
     }, { status: 500 });
