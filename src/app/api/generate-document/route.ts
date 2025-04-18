@@ -20,9 +20,6 @@ export async function POST(request: NextRequest) {
     // 4. Save the generated files to storage
     // 5. Save metadata to database
 
-    // For this example, we'll simulate the process
-    const documentId = uuidv4()
-
     // Simulate processing time
     await new Promise((resolve) => setTimeout(resolve, 1000))
 

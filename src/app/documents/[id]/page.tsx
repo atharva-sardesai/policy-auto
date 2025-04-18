@@ -9,8 +9,26 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+interface Company {
+  name: string;
+  address: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  createdAt: string;
+  status: string;
+  company: Company;
+  content: string;
+}
+
 // Mock document data
-const mockDocumentDetails = {
+const mockDocumentDetails: Record<string, Document> = {
   doc1: {
     id: "doc1",
     name: "Acme Inc. Privacy Policy",
@@ -28,7 +46,7 @@ const mockDocumentDetails = {
       <h1>Privacy Policy for Acme Inc.</h1>
       <p>Last updated: November 5, 2023</p>
       <h2>1. Introduction</h2>
-      <p>Acme Inc. ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
+      <p>Acme Inc. (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
       <h2>2. Information We Collect</h2>
       <p>We may collect information about you in a variety of ways. The information we may collect includes:</p>
       <ul>
@@ -47,7 +65,7 @@ const mockDocumentDetails = {
 export default function DocumentDetailPage() {
   const params = useParams()
   const documentId = params.id as string
-  const [document, setDocument] = useState<any>(null)
+  const [document, setDocument] = useState<Document | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -80,7 +98,7 @@ export default function DocumentDetailPage() {
             <div className="text-center">
               <h2 className="text-2xl font-bold">Document Not Found</h2>
               <p className="text-muted-foreground mt-2">
-                The document you're looking for doesn't exist or has been deleted.
+                The document you&apos;re looking for doesn&apos;t exist or has been deleted.
               </p>
               <Link href="/documents">
                 <Button className="mt-4">

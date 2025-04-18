@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       if (!Array.isArray(files)) {
         throw new Error('Files must be an array')
       }
-    } catch (error) {
+    } catch {
       return new NextResponse('Invalid files parameter', { status: 400 })
     }
     

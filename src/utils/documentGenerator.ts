@@ -1,9 +1,8 @@
-import { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, HeadingLevel } from 'docx';
+import { ImageRun } from 'docx';
 import { promises as fs } from 'fs';
 import fs_sync from 'fs';
 import path from 'path';
 import createReport from 'docx-templates';
-import { Buffer } from 'buffer';
 
 interface GenerateDocumentOptions {
   templatePath: string;

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { join, basename } from 'path'
+import { join } from 'path'
 import { mkdir, writeFile } from 'fs/promises'
-import { existsSync, readdirSync, statSync, readFileSync } from 'fs'
 import { generateDocument } from '@/utils/documentGenerator'
 import fs from 'fs/promises'
 import path from 'path'
-import { execSync } from 'child_process'
 
 // Helper function to directly use JavaScript for document generation
 async function generateWithPython(templatePath: string, outputDir: string, companyName: string, ownerName: string, logoPath?: string): Promise<string> {
@@ -46,11 +44,11 @@ export async function POST(request: NextRequest) {
     try {
       templateIds = JSON.parse(selectedTemplates);
       console.log(`Parsed template IDs: ${JSON.stringify(templateIds)}`);
-    } catch (parseError: any) {
-      console.error('Error parsing template IDs:', parseError?.message);
+    } catch (parseError: unknown) {
+      console.error('Error parsing template IDs:', parseError instanceof Error ? parseError.message : 'Unknown error');
       return Response.json({ 
         success: false, 
-        error: `Invalid template selection: ${parseError?.message}` 
+        error: `Invalid template selection: ${parseError instanceof Error ? parseError.message : 'Unknown error'}` 
       }, { status: 400 });
     }
     
