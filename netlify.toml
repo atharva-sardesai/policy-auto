@@ -15,7 +15,4 @@
 [build.processing.skip]
   pip = true
 
-# Disable all plugins
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  enabled = false 
+# No plugins needed for this build 
