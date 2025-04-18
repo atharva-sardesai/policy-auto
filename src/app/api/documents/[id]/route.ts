@@ -4,10 +4,10 @@ import path from 'path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = context.params;
     const docsDir = path.join(process.cwd(), 'generated_docs');
     const filePath = path.join(docsDir, id);
 
