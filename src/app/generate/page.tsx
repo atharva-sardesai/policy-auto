@@ -32,7 +32,7 @@ export default function GeneratePage() {
       }
       const data = await response.json();
       setTemplates(data);
-    } catch (err) {
+    } catch {
       setError('Failed to load templates. Please try again later.');
     }
   };
@@ -83,7 +83,7 @@ export default function GeneratePage() {
       } else {
         setError(data.error || 'Failed to generate documents');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while generating documents');
     } finally {
       setLoading(false);

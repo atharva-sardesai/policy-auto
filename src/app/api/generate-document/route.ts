@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { v4 as uuidv4 } from "uuid"
 
 // In a real app, you would use a library like docx.js to generate the document
 // This is a simplified example

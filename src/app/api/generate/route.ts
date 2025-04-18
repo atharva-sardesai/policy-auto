@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { join } from 'path'
 import { mkdir, writeFile } from 'fs/promises'
 import { generateDocument } from '@/utils/documentGenerator'
@@ -91,11 +91,11 @@ export async function POST(request: NextRequest) {
     try {
       templateFiles = await fs.readdir(templatesDir);
       console.log(`Found ${templateFiles.length} template files in ${templatesDir}`);
-    } catch (readError: any) {
-      console.error('Error reading templates directory:', readError?.message);
+    } catch (readError: unknown) {
+      console.error('Error reading templates directory:', readError instanceof Error ? readError.message : 'Unknown error');
       return Response.json({ 
         success: false, 
-        error: `Could not read templates: ${readError?.message}` 
+        error: `Could not read templates: ${readError instanceof Error ? readError.message : 'Unknown error'}` 
       }, { status: 500 });
     }
     
@@ -167,11 +167,11 @@ export async function POST(request: NextRequest) {
           if (stats.size === 0) {
             throw new Error('Template file is empty');
           }
-        } catch (statError: any) {
-          console.error(`Error checking template file: ${statError?.message}`);
+        } catch (statError: unknown) {
+          console.error(`Error checking template file: ${statError instanceof Error ? statError.message : 'Unknown error'}`);
           failedTemplates.push({
             id: templateId,
-            error: `Error checking template file: ${statError?.message}`
+            error: `Error checking template file: ${statError instanceof Error ? statError.message : 'Unknown error'}`
           });
           continue;
         }
@@ -190,11 +190,11 @@ export async function POST(request: NextRequest) {
         
         console.log(`Document generated successfully: ${outputPath}`);
         generatedDocs.push(path.basename(outputPath));
-      } catch (templateError: any) {
-        console.error(`Error processing template ${templateId}:`, templateError?.message);
+      } catch (templateError: unknown) {
+        console.error(`Error processing template ${templateId}:`, templateError instanceof Error ? templateError.message : 'Unknown error');
         failedTemplates.push({
           id: templateId,
-          error: templateError?.message || 'Unknown error'
+          error: templateError instanceof Error ? templateError.message : 'Unknown error'
         });
       }
     }
@@ -214,11 +214,11 @@ export async function POST(request: NextRequest) {
         failedTemplates 
       }, { status: 500 });
     }
-  } catch (error: any) {
-    console.error('Error in document generation API:', error?.message);
+  } catch (error: unknown) {
+    console.error('Error in document generation API:', error instanceof Error ? error.message : 'Unknown error');
     return Response.json({ 
       success: false, 
-      error: error?.message || "Unknown error" 
+      error: error instanceof Error ? error.message : "Unknown error" 
     }, { status: 500 });
   }
 } 
