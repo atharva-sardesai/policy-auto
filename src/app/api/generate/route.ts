@@ -5,18 +5,6 @@ import { generateDocument } from '@/utils/documentGenerator'
 import fs from 'fs/promises'
 import path from 'path'
 
-// Helper function to directly use JavaScript for document generation
-async function generateWithPython(templatePath: string, outputDir: string, companyName: string, ownerName: string, logoPath?: string): Promise<string> {
-  console.log("Using JavaScript for document generation (Python support removed)");
-  return await generateDocument({
-    templatePath,
-    outputDir,
-    companyName,
-    ownerName,
-    logoPath
-  });
-}
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log("Document generation API called");
   
@@ -221,4 +209,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: error instanceof Error ? error.message : "Unknown error" 
     }, { status: 500 });
   }
-} 
+}
