@@ -1,32 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDocumentById } from '@/lib/documents';
+import { promises as fs } from 'fs';
+import path from 'path';
 
+// Ensure this route is not statically optimized
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
+export async function GET(request: NextRequest) {
   try {
-    const resolvedParams = await params;
-    const document = await getDocumentById(resolvedParams.id);
-    if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    // Get the ID from the URL
+    const id = request.url.split('/').pop();
+    if (!id) {
+      return new NextResponse('Document ID is required', { status: 400 });
     }
 
-    // Return the document as a file download
-    return new NextResponse(document.content, {
+    // Construct safe file path
+    const filePath = path.join(process.cwd(), 'generated_docs', id);
+
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      return new NextResponse('Document not found', { status: 404 });
+    }
+
+    // Read and return the file
+    const content = await fs.readFile(filePath);
+
+    return new NextResponse(content, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${document.filename}"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Disposition': `attachment; filename="${id}"`,
       },
     });
   } catch (error) {
-    console.error('Error fetching document:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch document' },
-      { status: 500 }
-    );
+    console.error('Error retrieving document:', error);
+    return new NextResponse('Failed to retrieve document', { status: 500 });
   }
 }
 

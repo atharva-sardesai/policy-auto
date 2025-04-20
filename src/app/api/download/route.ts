@@ -1,82 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { existsSync, readdirSync } from 'fs'
-import { join } from 'path'
+import { promises as fs } from 'fs'
+import path from 'path'
+
+// Ensure this route is not statically optimized
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url)
-    const file = url.searchParams.get('file')
+    const { searchParams } = new URL(request.url)
+    const file = searchParams.get('file')
     
     if (!file) {
       return new NextResponse('File parameter is required', { status: 400 })
     }
     
-    // Prevent directory traversal attacks
-    if (file.includes('..') || file.startsWith('/') || file.startsWith('\\')) {
+    // Validate file path to prevent directory traversal
+    if (file.includes('..') || file.includes('/') || file.includes('\\')) {
       return new NextResponse('Invalid file path', { status: 400 })
     }
     
-    // Normalize the file path by replacing backslashes with forward slashes
-    const normalizedFile = file.replace(/\\/g, '/')
-    console.log(`Attempting to download file: ${normalizedFile}`)
+    // Construct safe file path
+    const filePath = path.join(process.cwd(), 'generated_docs', file)
     
-    // Build the file path
-    const filePath = join(process.cwd(), 'generated_docs', normalizedFile)
-    console.log(`Full file path: ${filePath}`)
-    
-    // Check if the file exists
-    if (!existsSync(filePath)) {
-      console.error(`File not found: ${filePath}`)
-      
+    // Check if file exists
+    try {
+      await fs.access(filePath)
+    } catch {
       // Try to find the file in the generated_docs directory
-      const docsDir = join(process.cwd(), 'generated_docs')
-      try {
-        const files = readdirSync(docsDir)
-        
-        // Look for a file that ends with the requested file name
-        const requestedFileName = normalizedFile.split('/').pop() || ''
-        if (requestedFileName) {
-          const matchingFile = files.find((f: string) => f.endsWith(requestedFileName))
-          
-          if (matchingFile) {
-            const alternativeFilePath = join(docsDir, matchingFile)
-            console.log(`Found alternative file path: ${alternativeFilePath}`)
-            
-            if (existsSync(alternativeFilePath)) {
-              // Read and return the alternative file
-              const fileContent = await readFile(alternativeFilePath)
-              return new NextResponse(fileContent, {
-                headers: {
-                  'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                  'Content-Disposition': `attachment; filename="${matchingFile}"`,
-                },
-              })
-            }
-          }
-        }
-      } catch (lookupErr) {
-        console.error('Error looking up alternative file:', lookupErr)
+      const docsDir = path.join(process.cwd(), 'generated_docs')
+      const files = await fs.readdir(docsDir)
+      const matchingFile = files.find(f => f.toLowerCase() === file.toLowerCase())
+      
+      if (!matchingFile) {
+        return new NextResponse('File not found', { status: 404 })
       }
       
-      return new NextResponse('File not found', { status: 404 })
+      // Use the found file
+      const foundFilePath = path.join(docsDir, matchingFile)
+      const content = await fs.readFile(foundFilePath)
+      
+      return new NextResponse(content, {
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'Content-Disposition': `attachment; filename="${matchingFile}"`,
+        },
+      })
     }
     
-    // Read the file
-    const fileContent = await readFile(filePath)
+    // Read and return the file
+    const content = await fs.readFile(filePath)
     
-    // Get the filename from the path
-    const fileName = file.split(/[/\\]/).pop() || file
-    
-    // Return the file with appropriate headers
-    return new NextResponse(fileContent, {
+    return new NextResponse(content, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `attachment; filename="${file}"`,
       },
     })
   } catch (error) {
-    console.error('Error handling download request:', error)
-    return new NextResponse('Internal server error', { status: 500 })
+    console.error('Error downloading file:', error)
+    return new NextResponse('Failed to download file', { status: 500 })
   }
 } 

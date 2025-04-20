@@ -1,97 +1,67 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
-import { readdir } from 'fs/promises'
-import { join } from 'path'
-import { statSync, existsSync } from 'fs'
+import { promises as fs } from 'fs'
+import path from 'path'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
-    const templatesDir = join(process.cwd(), 'templates')
+    const templatesDir = path.join(process.cwd(), 'templates')
     console.log(`Reading templates from directory: ${templatesDir}`);
     
     // Check if the directory exists first
-    if (!existsSync(templatesDir)) {
+    try {
+      await fs.access(templatesDir);
+    } catch {
       console.log('Templates directory does not exist');
-      return NextResponse.json({
-        templates: []
+      return new NextResponse(JSON.stringify({ templates: [] }), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     }
     
-    try {
-      const stats = statSync(templatesDir);
-      if (!stats.isDirectory()) {
-        console.log('Templates path exists but is not a directory');
-        return NextResponse.json({
-          templates: []
-        });
-      }
-    } catch (statError) {
-      console.error('Error checking templates directory:', statError);
-      return NextResponse.json({
-        templates: []
-      });
-    }
-
     // Read directory contents
-    let files;
-    try {
-      files = await readdir(templatesDir);
-      console.log(`Found ${files.length} files in templates directory`);
-      console.log(`Raw file list: ${JSON.stringify(files)}`);
-    } catch (readdirError) {
-      console.error('Error reading templates directory:', readdirError);
-      return NextResponse.json({
-        templates: []
-      });
-    }
+    const files = await fs.readdir(templatesDir);
     
-    // Filter for only Word documents and text files, and make sure they exist
-    const templateFiles = files.filter(file => {
-      // Skip directories and hidden files
-      if (file.startsWith('.') || file === 'samples') return false;
-      
-      // Accept docx and txt files
-      if (!file.endsWith('.docx') && !file.endsWith('.txt')) {
-        console.log(`Skipping non-document file: ${file}`);
-        return false;
-      }
-      
-      // Additional check that file exists and is readable
-      try {
-        const filePath = join(templatesDir, file);
-        const fileStats = statSync(filePath);
-        const isValid = fileStats.isFile() && fileStats.size > 0;
-        
-        if (!isValid) {
-          console.log(`Skipping invalid file: ${file} (isFile: ${fileStats.isFile()}, size: ${fileStats.size})`);
-        }
-        return isValid;
-      } catch (fileError) {
-        console.warn(`Error checking template file ${file}:`, fileError);
-        return false;
-      }
-    });
-    
-    console.log(`Filtered template files: ${JSON.stringify(templateFiles)}`);
-    
-    // Format for the frontend - use the EXACT filename as the ID
-    const templates = templateFiles.map(file => ({
-      id: file, // Use exact filename with extension as ID
-      name: file.replace(/\.(docx|txt)$/, '').replace(/_/g, ' ')
-    }));
+    // Filter for .docx files and map to template objects
+    const templates = await Promise.all(
+      files
+        .filter(file => file.endsWith('.docx'))
+        .map(async file => {
+          const filePath = path.join(templatesDir, file);
+          const stats = await fs.stat(filePath);
+          return {
+            id: file,
+            name: file.replace('.docx', ''),
+            type: 'docx',
+            size: stats.size,
+            lastModified: stats.mtime.toISOString()
+          };
+        })
+    );
     
     console.log(`Returning ${templates.length} templates to frontend`);
     console.log(`Template data: ${JSON.stringify(templates)}`);
     
-    return NextResponse.json({
-      templates
+    return new NextResponse(JSON.stringify({ templates }), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch templates',
-      templates: []
-    }, { status: 500 });
+    console.error('Error listing templates:', error);
+    return new NextResponse(JSON.stringify({ 
+      error: 'Failed to list templates',
+      templates: [] 
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
 
@@ -103,27 +73,35 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File
 
     if (!name || !type || !file) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return new NextResponse('Missing required fields', { status: 400 })
     }
 
-    // In a real app, you would upload the template file to Vercel Blob
-    // const blob = await put(`templates/${uuidv4()}.docx`, file, {
-    //   access: 'private',
-    // })
+    // Ensure templates directory exists
+    const templatesDir = path.join(process.cwd(), 'templates')
+    await fs.mkdir(templatesDir, { recursive: true })
 
-    // In a real app, you would save template metadata to your database
-    const templateId = uuidv4()
+    // Generate a unique filename
+    const filename = `${name.replace(/\s+/g, '_')}_${uuidv4()}.docx`
+    const filePath = path.join(templatesDir, filename)
 
-    return NextResponse.json({
-      id: templateId,
+    // Save the template file
+    const buffer = Buffer.from(await file.arrayBuffer())
+    await fs.writeFile(filePath, buffer)
+
+    return new NextResponse(JSON.stringify({
+      id: filename,
       name,
       type,
       updatedAt: new Date().toISOString().split("T")[0],
       message: "Template uploaded successfully",
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     })
   } catch (error) {
     console.error("Error uploading template:", error)
-    return NextResponse.json({ error: "Failed to upload template" }, { status: 500 })
+    return new NextResponse('Failed to upload template', { status: 500 })
   }
 }
 

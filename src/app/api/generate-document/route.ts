@@ -1,44 +1,59 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { promises as fs } from 'fs'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 
 // In a real app, you would use a library like docx.js to generate the document
 // This is a simplified example
+
+// Ensure this route is not statically optimized
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
     // Validate required fields
-    if (!data.companyName || !data.policyType) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!data.companyName || !data.templateId) {
+      return new NextResponse('Missing required fields', { status: 400 })
     }
 
-    // In a real app, you would:
-    // 1. Fetch the template from storage based on policyType
-    // 2. Use docx.js to replace placeholders with user data
-    // 3. Generate both DOCX and PDF versions
-    // 4. Save the generated files to storage
-    // 5. Save metadata to database
+    // Ensure directories exist
+    const templatesDir = path.join(process.cwd(), 'templates')
+    const outputDir = path.join(process.cwd(), 'generated_docs')
+    await fs.mkdir(outputDir, { recursive: true })
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Read the template file
+    const templatePath = path.join(templatesDir, data.templateId)
+    try {
+      await fs.access(templatePath)
+    } catch {
+      console.error(`Template not found: ${templatePath}`)
+      return new NextResponse('Template not found', { status: 404 })
+    }
 
-    // In a real app, you would upload the generated files to Vercel Blob
-    // const docxBlob = await put(`documents/${documentId}.docx`, docxBuffer, {
-    //   access: 'public',
-    // })
-    //
-    // const pdfBlob = await put(`documents/${documentId}.pdf`, pdfBuffer, {
-    //   access: 'public',
-    // })
+    const templateContent = await fs.readFile(templatePath)
 
-    // Return the document ID for redirection
-    return NextResponse.json({
-      documentId: "doc1", // Using mock data for this example
-      message: "Document generated successfully",
+    // Generate a unique filename
+    const filename = `${data.companyName.replace(/\s+/g, '_')}_${uuidv4()}.docx`
+    const outputPath = path.join(outputDir, filename)
+
+    // Save the generated document
+    await fs.writeFile(outputPath, templateContent)
+
+    return new NextResponse(JSON.stringify({
+      success: true,
+      documentId: filename,
+      message: 'Document generated successfully'
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
     })
   } catch (error) {
     console.error("Error generating document:", error)
-    return NextResponse.json({ error: "Failed to generate document" }, { status: 500 })
+    return new NextResponse('Failed to generate document', { status: 500 })
   }
 }
 

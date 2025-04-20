@@ -1,80 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join } from 'path'
-import JSZip from 'jszip'
+import { NextResponse } from 'next/server'
+import { promises as fs } from 'fs'
+import path from 'path'
+import archiver from 'archiver'
 
-export async function GET(request: NextRequest) {
+// Ensure this route is not statically optimized
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export async function GET() {
   try {
-    const url = new URL(request.url)
-    const filesParam = url.searchParams.get('files')
+    const docsDir = path.join(process.cwd(), 'generated_docs')
     
-    if (!filesParam) {
-      return new NextResponse('Files parameter is required', { status: 400 })
-    }
-    
-    // Parse the files array
-    let files: string[]
+    // Check if directory exists
     try {
-      files = JSON.parse(decodeURIComponent(filesParam))
-      if (!Array.isArray(files)) {
-        throw new Error('Files must be an array')
-      }
+      await fs.access(docsDir)
     } catch {
-      return new NextResponse('Invalid files parameter', { status: 400 })
+      return new NextResponse('No documents found', { status: 404 })
     }
-    
-    // Create a new ZIP archive
-    const zip = new JSZip()
-    
-    // Add each file to the ZIP
-    for (const filePath of files) {
-      // Extract the filename from the path
-      const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown.docx'
-      
-      // Make sure we're only accessing files in the generated_policies directory
-      const relativePath = filePath.split('generated_policies/').pop()
-      if (!relativePath) {
-        console.warn(`Skipping file with invalid path: ${filePath}`)
-        continue
-      }
-      
-      // Prevent directory traversal attacks
-      if (relativePath.includes('..') || relativePath.startsWith('/') || relativePath.startsWith('\\')) {
-        console.warn(`Skipping file with suspicious path: ${relativePath}`)
-        continue
-      }
-      
-      // Build the absolute file path
-      const absolutePath = join(process.cwd(), 'generated_policies', relativePath)
-      
-      // Check if the file exists
-      if (!existsSync(absolutePath)) {
-        console.warn(`File not found: ${absolutePath}`)
-        continue
-      }
-      
-      // Read the file and add it to the ZIP
-      try {
-        const fileContent = await readFile(absolutePath)
-        zip.file(fileName, fileContent)
-      } catch (err) {
-        console.error(`Error adding file to ZIP: ${absolutePath}`, err)
-      }
+
+    // Get list of files
+    const files = await fs.readdir(docsDir)
+    if (files.length === 0) {
+      return new NextResponse('No documents found', { status: 404 })
     }
+
+    // Create a zip archive
+    const archive = archiver('zip', {
+      zlib: { level: 9 } // Sets the compression level
+    })
+
+    // Add each file to the archive
+    for (const file of files) {
+      const filePath = path.join(docsDir, file)
+      archive.file(filePath, { name: file })
+    }
+
+    // Finalize the archive
+    archive.finalize()
+
+    // Create a response with the archive
+    const chunks: Buffer[] = []
+    archive.on('data', (chunk: Buffer) => chunks.push(chunk))
     
-    // Generate the ZIP content
-    const zipContent = await zip.generateAsync({ type: 'nodebuffer' })
-    
-    // Return the ZIP file
-    return new NextResponse(zipContent, {
+    await new Promise((resolve, reject) => {
+      archive.on('end', resolve)
+      archive.on('error', reject)
+    })
+
+    const zipBuffer = Buffer.concat(chunks)
+
+    return new NextResponse(zipBuffer, {
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': 'attachment; filename="policy_documents.zip"',
+        'Content-Disposition': 'attachment; filename="documents.zip"',
       },
     })
   } catch (error) {
-    console.error('Error generating ZIP file:', error)
-    return new NextResponse('Internal server error', { status: 500 })
+    console.error('Error creating zip archive:', error)
+    return new NextResponse('Failed to create zip archive', { status: 500 })
   }
 } 
