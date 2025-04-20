@@ -17,10 +17,6 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  experimental: {
-    serverActions: true,
-  },
-
   // Netlify specific configuration
   generateBuildId: async () => {
     return 'build-' + Date.now();
@@ -34,6 +30,11 @@ const nextConfig = {
         destination: '/api/:path*',
       },
     ];
+  },
+
+  // Disable experimental features that might cause issues
+  experimental: {
+    serverActions: false,
   },
 };
 

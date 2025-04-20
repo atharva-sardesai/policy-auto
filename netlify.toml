@@ -21,5 +21,8 @@
 # Next.js plugin configuration
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    buildCommand = "npm run build"
+    publishDirectory = ".next"
 
 # No plugins needed for this build 
