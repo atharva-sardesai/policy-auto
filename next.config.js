@@ -20,6 +20,11 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+
+  // Netlify specific configuration
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
 };
 
 module.exports = nextConfig; 
