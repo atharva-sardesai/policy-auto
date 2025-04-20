@@ -1,71 +1,36 @@
-import { NextRequest } from 'next/server';
-import fs from 'fs/promises';
+import { NextRequest, NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
 import path from 'path';
+
+export const dynamic = 'force-dynamic';
 
 // Updated to match Next.js 15.2.4 requirements for context
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
-) {
+  { params }: { params: Promise<{ filename: string }> }
+): Promise<NextResponse> {
   try {
-    // Access the filename from params safely
-    if (!params) {
-      return new Response('Missing filename parameter', { status: 400 });
-    }
-    
-    const filename = params.filename;
-    const decodedFilename = decodeURIComponent(filename);
-    console.log(`Downloading file: ${decodedFilename}`);
-    
-    // Ensure the filename is safe - don't allow path traversal
-    if (decodedFilename.includes('..') || decodedFilename.includes('/') || decodedFilename.includes('\\')) {
-      return new Response('Invalid filename', { status: 400 });
-    }
-    
-    // Path to the generated docs directory
-    const docsDir = path.join(process.cwd(), 'generated_docs');
-    const filePath = path.join(docsDir, decodedFilename);
-    
-    console.log(`Looking for file at: ${filePath}`);
+    const resolvedParams = await params;
+    const filePath = path.join(process.cwd(), 'generated_docs', resolvedParams.filename);
     
     try {
-      // Check if file exists
-      const stats = await fs.stat(filePath);
-      
-      if (!stats.isFile()) {
-        console.error(`Not a file: ${filePath}`);
-        return new Response('Not a file', { status: 404 });
-      }
-      
-      console.log(`Found file: ${filePath}, size: ${stats.size} bytes`);
-      
-      // Read file
-      const fileBuffer = await fs.readFile(filePath);
-      
-      // Determine content type
-      let contentType = 'application/octet-stream';
-      if (decodedFilename.endsWith('.docx')) {
-        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      } else if (decodedFilename.endsWith('.pdf')) {
-        contentType = 'application/pdf';
-      }
-      
-      console.log(`Serving file: ${decodedFilename}, content-type: ${contentType}`);
-      
-      // Return the file
-      return new Response(fileBuffer, {
-        headers: {
-          'Content-Type': contentType,
-          'Content-Disposition': `attachment; filename="${decodedFilename}"`,
-          'Content-Length': stats.size.toString(),
-        },
-      });
-    } catch (error) {
-      console.error(`Error serving file ${filePath}:`, error);
-      return new Response('File not found', { status: 404 });
+      await fs.access(filePath);
+    } catch {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
+
+    const content = await fs.readFile(filePath);
+    return new NextResponse(content, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${resolvedParams.filename}"`,
+      },
+    });
   } catch (error) {
-    console.error('Error in download handler:', error);
-    return new Response('Internal server error', { status: 500 });
+    console.error('Error downloading file:', error);
+    return NextResponse.json(
+      { error: 'Failed to download file' },
+      { status: 500 }
+    );
   }
 } 

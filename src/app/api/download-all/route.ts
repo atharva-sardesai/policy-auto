@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
-import * as JSZip from 'jszip'
+import JSZip from 'jszip'
 
 export async function GET(request: NextRequest) {
   try {

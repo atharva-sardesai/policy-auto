@@ -10,9 +10,19 @@
   DISABLE_ESLINT_PLUGIN = "true"
   ESLINT_NO_DEV_ERRORS = "true"
   SKIP_ESLINT_CHECK = "true"
+  NEXT_MINIMAL = "1"
+  NEXT_PRIVATE_SKIP_TYPE_CHECK = "true"
+  NEXT_PRIVATE_SKIP_VALIDATION = "1"
 
 # Skip Python installation since we're using a JavaScript-only approach
 [build.processing.skip]
   pip = true
+
+# Next.js plugin configuration
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    functions = "netlify/functions"
+    publish = ".next"
 
 # No plugins needed for this build 

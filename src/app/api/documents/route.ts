@@ -1,45 +1,21 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs/promises';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // In a real app, you would fetch documents from your database
-    // For this example, we'll return mock data
-
-    const documents = [
-      {
-        id: "doc1",
-        name: "Acme Inc. Privacy Policy",
-        type: "privacy",
-        createdAt: "2023-11-05",
-        status: "completed",
-      },
-      {
-        id: "doc2",
-        name: "TechCorp Terms of Service",
-        type: "terms",
-        createdAt: "2023-11-03",
-        status: "completed",
-      },
-      {
-        id: "doc3",
-        name: "Global Solutions GDPR Policy",
-        type: "gdpr",
-        createdAt: "2023-10-28",
-        status: "completed",
-      },
-      {
-        id: "doc4",
-        name: "Startup Inc. Security Policy",
-        type: "security",
-        createdAt: "2023-10-25",
-        status: "completed",
-      },
-    ]
-
-    return NextResponse.json({ documents })
+    const docsDir = path.join(process.cwd(), 'generated_docs');
+    const files = await fs.readdir(docsDir);
+    
+    return NextResponse.json(files);
   } catch (error) {
-    console.error("Error fetching documents:", error)
-    return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 })
+    console.error('Error listing documents:', error);
+    return NextResponse.json(
+      { error: 'Failed to list documents' },
+      { status: 500 }
+    );
   }
 }
 
