@@ -21,8 +21,5 @@
 # Next.js plugin configuration
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    functions = "netlify/functions"
-    publish = ".next"
 
 # No plugins needed for this build 

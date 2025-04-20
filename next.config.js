@@ -25,6 +25,16 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
+
+  // Ensure proper handling of API routes
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig; 
